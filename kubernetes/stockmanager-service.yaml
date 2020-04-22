@@ -10,9 +10,9 @@ spec:
   selector:
     app: stockmanager
   ports:
-  - protocol: TCP
-    port: 8030
-    name: http
+    - protocol: TCP
+      port: 8030
+      name: http
 
 ---
 apiVersion: v1
@@ -27,13 +27,13 @@ spec:
         app: stockmanager
     spec:
       containers:
-      - name: stockmanager
-        image: danielbryantuk/djstockmanager:1.0
-        ports:
-        - containerPort: 8030
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8030
-          initialDelaySeconds: 30
-          timeoutSeconds: 1
+        - name: stockmanager
+          image: robinjohnhopkins/djstockmanager:1.0
+          ports:
+            - containerPort: 8030
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8030
+            initialDelaySeconds: 30
+            timeoutSeconds: 1

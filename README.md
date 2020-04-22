@@ -1,3 +1,118 @@
+### changes for java 11
+
+additions to pom dependencies
+
+### /health url moved /actuator/health
+
+```
+http://localhost:8030/actuator/health
+{"status":"UP"}
+```
+
+as of springboot 2.0.5.RELEASE the health check endpoint is http://hostname:portnumber/applicationroot/actuator/health
+see stockmanager-service.yaml below
+
+also check if you have added the dependency
+
+```
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+```
+
+### update dockerhub repo names used
+
+build_all_and_publish_dockerhub.sh
+```
+ cd shopfront
+ mvn clean install
+-if docker build -t danielbryantuk/djshopfront . ; then
+-  docker push danielbryantuk/djshopfront
++if docker build -t robinjohnhopkins/djshopfront . ; then
++  docker push robinjohnhopkins/djshopfront
+ fi
+ cd ..
+```
+
+kubernetes/productcatalogue-service.yaml
+```
+     spec:
+       containers:
+       - name: productcatalogue
+-        image: danielbryantuk/djproductcatalogue:1.0
++        image: robinjohnhopkins/djproductcatalogue:1.0
+```
+
+similarly for
+
+kubernetes/shopfront-service.yaml
+
+stockmanager-service.yaml
+```
+     spec:
+       containers:
+-      - name: stockmanager
+-        image: danielbryantuk/djstockmanager:1.0
+-        ports:
+-        - containerPort: 8030
+-        livenessProbe:
+-          httpGet:
+-            path: /health
+-            port: 8030
+-          initialDelaySeconds: 30
+-          timeoutSeconds: 1
++        - name: stockmanager
++          image: robinjohnhopkins/djstockmanager:1.0
++          ports:
++            - containerPort: 8030
++          livenessProbe:
++            httpGet:
++              path: /actuator/health
++              port: 8030
++            initialDelaySeconds: 30
++            timeoutSeconds: 1
+```
+
+### use adoptopenjdk/openjdk11 docker image
+```
+shopfront/Dockerfile
+@@ -1,4 +1,4 @@
+-FROM openjdk:8-jre
++FROM adoptopenjdk/openjdk11
+ ADD target/shopfront-0.0.1-SNAPSHOT.jar app.jar
+ EXPOSE 8010
+ ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+```
+
+### spring config
+
+stockmanager/src/main/resources/application.properties
+
+```
++server.port = 8030
++logging.level.org.springframework=DEBUG
++logging.level.com.zaxxer=DEBUG
++logging.level.org.hibernate=DEBUG
++
++# default path is jdbc:h2:mem:testdb
++# adding ;DB_CLOSE_ON_EXIT=FALSE
++# causes db to stay open
++#spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE
++spring.datasource.url=jdbc:h2:mem:testdb
++spring.datasource.driverClassName=org.h2.Driver
++spring.datasource.username=sa
++spring.datasource.password=
++
++spring.h2.console.enabled=true
++
++# very cool - spring.h2.console.enabled=true
++# causes h2 memory to accept connection on same port as listening, path h2-console gui
++# http://localhost:8030/h2-console
+```
+
+## FOLLOWS is original README
+
 # oreilly-docker-java-shopping
 This repo contains code samples from my O'Reilly minibook ["Containerizing Continuous Delivery in Java: Docker Integration for Build Pipelines and Application Architecture"](https://www.nginx.com/resources/library/containerizing-continuous-delivery-java/).
 

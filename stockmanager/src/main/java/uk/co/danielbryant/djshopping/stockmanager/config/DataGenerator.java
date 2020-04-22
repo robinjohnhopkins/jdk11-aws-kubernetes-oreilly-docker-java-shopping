@@ -32,7 +32,10 @@ public class DataGenerator {
         stockRepository.save(new Stock("3", "54326745", 999));
         stockRepository.save(new Stock("4", "93847614", 0));
         stockRepository.save(new Stock("5", "11856388", 1));
+        stockRepository.save(new Stock("6", "11856399", 2));
+        stockRepository.save(new Stock("7", "11856300", 3));
 
         LOGGER.info("... data generation complete");
+        // 2020-04-22 14:13:14.213  INFO 1 --- [           main] u.c.d.d.s.config.DataGenerator           : ... data generation complete
     }
 }

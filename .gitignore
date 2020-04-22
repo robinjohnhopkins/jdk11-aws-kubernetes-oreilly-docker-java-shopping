@@ -24,3 +24,8 @@ buildNumber.properties
 
 #logs
 *.log
+
+
+.classpath
+.project
+.settings/
