@@ -111,6 +111,75 @@ stockmanager/src/main/resources/application.properties
 +# http://localhost:8030/h2-console
 ```
 
+## Notes on using AWS cli to deploy
+
+https://www.oreilly.com/content/how-to-manage-docker-containers-in-kubernetes-with-java/
+
+```
+mvn dependency:tree             # to help port jdk 8 to jdk11
+
+
+eksctl create cluster \
+   --name wp-cluster \
+   --version 1.12 \
+   --nodegroup-name standard-workers \
+   --node-type t3.medium \
+   --nodes 1 \
+   --nodes-min 1 \
+   --nodes-max 4 \
+   --node-ami auto
+
+NB not sure if I could use a cheaper node type.
+
+#check cluster created
+ubuntu@ip-172-31-18-50:~/simpleapache$ kubectl get all
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   6m39s
+
+ubuntu@ip-172-31-18-50:~/simpleapache$ eksctl get cluster
+NAME		REGION
+wp-cluster	eu-west-2
+
+kubectl apply -f shopfront-service.yaml
+    service/shopfront created
+    replicationcontroller/shopfront created
+
+kubectl apply -f productcatalogue-service.yaml 
+kubectl apply -f stockmanager-service.yaml
+
+kubectl expose rc shopfront --port=8010 --target-port=8010     --name=example-service --type=LoadBalancer
+
+kubectl get all
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/productcatalogue-7h2wx   1/1     Running   0          44m
+pod/shopfront-mpjp5          1/1     Running   0          31m
+pod/stockmanager-xwslj       1/1     Running   0          44m
+
+NAME                                     DESIRED   CURRENT   READY   AGE
+replicationcontroller/productcatalogue   1         1         1       3h2m
+replicationcontroller/shopfront          1         1         1       4h30m
+replicationcontroller/stockmanager       1         1         1       3h2m
+
+NAME                       TYPE           CLUSTER-IP       EXTERNAL-IP                                                               PORT(S)                         AGE
+service/example-service    LoadBalancer   10.100.219.35    aae581bc6849311eab2610642c347780-1683313406.eu-west-2.elb.amazonaws.com   8010:32070/TCP                  3h26m
+service/kubernetes         ClusterIP      10.100.0.1       <none>                                                                    443/TCP                         5h17m
+service/productcatalogue   NodePort       10.100.244.205   <none>                                                                    8020:32348/TCP                  3h2m
+service/shopfront          NodePort       10.100.27.226    <none>                                                                    8010:32465/TCP                  4h30m
+service/stockmanager       NodePort       10.100.253.161   <none>                                                                    8030:30809/TCP,8080:31118/TCP   3h2m
+
+in browser:
+
+http://aae581bc6849311eab2610642c347780-1683313406.eu-west-2.elb.amazonaws.com:8010
+```
+
+### stop and tidy - NB clusters can be pricey per hour!
+
+kubectl delete service/stockmanager service/shopfront service/productcatalogue service/example-service replicationcontroller/stockmanager replicationcontroller/shopfront replicationcontroller/productcatalogue
+
+
+eksctl delete cluster --name wp-cluster
+
+
 ## FOLLOWS is original README
 
 # oreilly-docker-java-shopping
